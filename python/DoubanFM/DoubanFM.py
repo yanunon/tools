@@ -73,7 +73,7 @@ class DoubanFM(object):
                 continue
             resp = urllib2.urlopen(song['url'])
             data = resp.read()
-            songf = open(name, 'w')
+            songf = open(name, 'wb')
             songf.write(data)
             songf.close()
             #eyeD3在Windows工作不正常
