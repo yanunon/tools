@@ -6,7 +6,7 @@ import os
 import subprocess
 import getpass
 
-IMG_DIR = '/home/kite/Pictures/bing'
+IMG_DIR = 'bing'
 
 def download_img():
     url = 'http://www.bing.com'
