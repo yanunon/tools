@@ -9,11 +9,11 @@ Created on 2012-7-20
 import urllib
 import urllib2
 import cookielib
-import Image
 import StringIO
 import json
 import os
 import eyeD3
+import sys
 
 class DoubanFM(object):
     headers_web = {'User-Agent':'Mozilla/5.0(iPad; U; CPU OS 4_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8F191 Safari/6533.18.5'}
@@ -22,41 +22,6 @@ class DoubanFM(object):
     def __init__(self, user_name, user_passwd):
         self.user_name = user_name
         self.user_passwd = user_passwd
-        
-    def login_web(self):
-        login_url = 'http://douban.fm/j/login'
-        captcha_id, captcha_solution = self._get_captcha()
-        data = {'source' : 'radio',
-                'alias' : self.user_name,
-                'form_password' : self.user_passwd,
-                'captcha_solution' :  captcha_solution,
-                'captcha_id' : captcha_id, 
-                }
-        data = urllib.urlencode(data)
-        req = urllib2.Request(login_url, data, self.headers_web)
-        resp = urllib2.urlopen(req)
-        login_data = json.loads(resp.read())
-        self.user_id = login_data['user_info']['id']
-        #print self.user_id
-        
-    def _get_captcha(self):
-        new_captcha_url = 'http://douban.fm/j/new_captcha'
-        req = urllib2.Request(new_captcha_url, None, self.headers_web)
-        resp = urllib2.urlopen(req)
-        captcha_id = resp.read()
-        captcha_id = captcha_id.replace('"','')
-        captcha_img_url = 'http://douban.fm/misc/captcha?size=m&id=' + captcha_id
-
-        req = urllib2.Request(captcha_img_url, None, self.headers_web)
-        resp = urllib2.urlopen(req)
-        
-        imgf = StringIO.StringIO(resp.read())
-        im = Image.open(imgf)
-        im.show()
-        imgf.close()
-        
-        captcha_solution = raw_input('Please enter the captch code:')
-        return captcha_id, captcha_solution
     
     def login_android(self):
         login_url = 'http://www.douban.com/j/app/login'
@@ -72,12 +37,11 @@ class DoubanFM(object):
         resp = urllib2.urlopen(req)
         login_data = json.loads(resp.read())
         #print login_data
-        if login_data['err'] != 'ok':
-            print 'login_android error!'
-            return
-        self.user_id = login_data['user_id']
-        self.token = login_data['token']
-        self.expire = login_data['expire']
+        if login_data['err'] == 'ok':
+            self.user_id = login_data['user_id']
+            self.token = login_data['token']
+            self.expire = login_data['expire']
+        return login_data['err']
     
     def _get_liked_list(self, count):
         liked_list_url = 'http://www.douban.com/j/app/radio/liked_songs?exclude=675558|12384|642358|546734|10761|761079|1394944|546727|676245|431315&version=608&client=s:mobile|y:android+4.1.1|f:608|m:Google|d:-1178839463|e:google_galaxy_nexus&app_name=radio_android&from=android_608_Google&formats=aac'
@@ -92,7 +56,10 @@ class DoubanFM(object):
         #print json.dumps(liked_list, sort_keys=True, indent=4)
        
     def download(self, count, dir='liked'):
-        self.login_android()
+        ret = self.login_android()
+        if ret != 'ok':
+            print ret
+            return
         songs = self._get_liked_list(count)
         
         if os.path.isdir(dir) is False:
@@ -100,14 +67,18 @@ class DoubanFM(object):
         dir = os.path.abspath(dir)
         
         for song in songs:
+            song['title'] = song['title'].replace('/', '&')
             name = os.path.join(dir,song['title']+'.mp3')
             if os.path.exists(name):
                 continue
             resp = urllib2.urlopen(song['url'])
+            data = resp.read()
             songf = open(name, 'w')
-            songf.write(resp.read())
+            songf.write(data)
             songf.close()
-            self._add_tag(song, name)
+            #eyeD3在Windows工作不正常
+            if sys.platform == 'linux2':
+                self._add_tag(song, name)
             print song['title']
             
     def _add_tag(self, song, filename):
@@ -126,5 +97,5 @@ def setup_cookie():
 
 if __name__ == '__main__':
     setup_cookie()
-    d = DoubanFM('DOUBAN_USER_NAME', 'DOUBAN_PASSWORD') #豆瓣帐号和密码
+    d = DoubanFM('DOUBAN_ID', 'DOUBAN_PASSWORD') #豆瓣帐号和密码
     d.download(100) #红心歌曲数量
