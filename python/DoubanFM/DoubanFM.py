@@ -96,6 +96,12 @@ def setup_cookie():
     urllib2.install_opener(opener)
 
 if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print 'Useage:./DoubanFM.py DOUBAN_ID DOUBAN_PASSWORD [number]'
+        sys.exit(0)
+    num = 100
+    if len(sys.argv) == 4:
+        num = int(sys.argv[3])
     setup_cookie()
-    d = DoubanFM('DOUBAN_ID', 'DOUBAN_PASSWORD') #豆瓣帐号和密码
-    d.download(100) #红心歌曲数量
+    d = DoubanFM(sys.argv[1], sys.argv[2]) #豆瓣帐号和密码
+    d.download(num) #红心歌曲数量
