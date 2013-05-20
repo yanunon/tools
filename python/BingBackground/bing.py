@@ -9,7 +9,7 @@ import getpass
 IMG_DIR = 'bing'
 
 def download_img():
-    url = 'http://www.bing.com'
+    url = 'http://cn.bing.com'
     img_path = ''
     try:
         resp = urllib2.urlopen(url)
@@ -17,12 +17,12 @@ def download_img():
         img_re_str = r'g_img={url:\'(.*?1366x768\.jpg)\''
         result = re.search(img_re_str, html_str)
         if result:
-            img_url = 'http://www.bing.com' + result.group(1)
+            img_url = result.group(1)
             #print img_url
   
             if not os.path.exists(IMG_DIR):
                 os.makedirs(IMG_DIR)
-            tmp_img_path = img_url[img_url.rfind('rb%2f')+5:]
+            tmp_img_path = img_url[img_url.rfind('/')+1:]
             tmp_img_path = os.path.join(IMG_DIR, tmp_img_path)
             tmp_img_path = os.path.abspath(tmp_img_path)
             if os.path.exists(tmp_img_path):
