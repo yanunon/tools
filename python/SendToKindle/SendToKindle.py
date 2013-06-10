@@ -118,6 +118,9 @@ def main():
     html_filename = os.path.join(DATA_DIR, news['date']+'.html')
     mobi_filename = os.path.join(DATA_DIR, news['date']+'.mobi')
 
+    if os.path.exists(mobi_filename):
+        return
+
     f = open(html_filename, 'w')
     f.write(contents)
     f.close()
