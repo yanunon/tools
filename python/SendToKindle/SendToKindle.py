@@ -34,6 +34,8 @@ CONTENT_TEMPLATE = '''
 '''
 CONTENT_ITEM_TEMPLATE = '<a href="%s">%s</a><br/>'
 
+HEADER={'User-Agent' : 'Android-4.1.1'}
+
 def fetch_blob(url):
     dst = url[url.find(r'://')+3:]
     dst = os.path.join('media', dst)
@@ -44,8 +46,9 @@ def fetch_blob(url):
     folder = os.path.dirname(dst_path)
     if not os.path.exists(folder):
         os.makedirs(folder)
-
-    resp = urllib2.urlopen(url)
+    
+    req = urllib2.Request(url, headers=HEADER)
+    resp = urllib2.urlopen(req)
     f = open(dst_path, 'wb')
     f.write(resp.read())
     f.close()
@@ -68,7 +71,8 @@ def fetch_zhihu(No):
     url = 'http://daily.zhihu.com/api/1.1/news/%d' % No
 
     html_filename = '%s/%d.html' % (DATA_DIR, No)
-    resp = urllib2.urlopen(url)
+    req = urllib2.Request(url, headers=HEADER)
+    resp = urllib2.urlopen(req)
     html = resp.read()
     bs = BS(html)
     replace_media(bs)
@@ -101,7 +105,8 @@ def send_to_kindle(mobi_file, title):
 
 def main():
     latest = 'http://daily.zhihu.com/api/1.1/news/latest'
-    resp = urllib2.urlopen(latest)
+    req = urllib2.Request(latest, headers=HEADER)
+    resp = urllib2.urlopen(req)
     news = json.loads(resp.read())
     contents_body = ''
     for new in news['news']:
